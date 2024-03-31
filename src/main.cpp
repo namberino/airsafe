@@ -101,8 +101,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             var gasValue = parseFloat(data[0]);
             var coValue = parseFloat(data[1]);
 
-            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 30 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 60 ? 'Bad' : 'Good') + "</span>";
-            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 2 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 2 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 30 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 30 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 3 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 3 ? 'Bad' : 'Good') + "</span>";
         };
     </script>
 </body>
@@ -178,7 +178,7 @@ void loop()
             lcd.print("Gas level: Good");
 
         lcd.setCursor(0,1);
-        if (ppm_co > 2) 
+        if (ppm_co > 3.2) 
             lcd.print("CO level: Bad");
         else
             lcd.print("CO level: Good");
