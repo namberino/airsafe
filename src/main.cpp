@@ -29,7 +29,7 @@ LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);
 
 float calculatePPM(int sensorValue, float R0, float m, float c);
 
-void onWsEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType type, void *arg, uint8_t *data, size_t len) {}
+void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {}
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
@@ -129,7 +129,7 @@ void setup()
     Serial.println(WiFi.localIP());
 
     // Route for root / web page
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    server.on("/", HTTP_GET, [](AsyncWebServerRequest* request){
         request->send_P(200, "text/html", index_html);
     });
 
