@@ -6,8 +6,8 @@
 #include <AsyncTCP.h>
 #include <AsyncWebSocket.h>
 
-const char* ssid = "MyBi";
-const char* password = "ViTiS24022004";
+const char* ssid = "ssid";
+const char* password = "password";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -94,8 +94,8 @@ const char index_html[] PROGMEM = R"rawliteral(
             var gasValue = parseFloat(data[0]);
             var coValue = parseFloat(data[1]);
 
-            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 60 ? 'bad' : 'good') + " status'>" + (gasValue > 60 ? 'Bad' : 'Good') + "</span>";
-            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 2 ? 'bad' : 'good') + " status'>" + (coValue > 2 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 30 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 60 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 2 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 2 ? 'Bad' : 'Good') + "</span>";
         };
     </script>
 </body>
@@ -169,7 +169,7 @@ void loop()
         if (last_state == LOW)
             lcd.clear();
         lcd.setCursor(0, 0);
-        if (ppm_gas > 60) 
+        if (ppm_gas > 30) 
             lcd.print("Gas level: Bad");
         else
             lcd.print("Gas level: Good");
