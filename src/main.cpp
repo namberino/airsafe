@@ -45,6 +45,7 @@ const char index_html[] PROGMEM = R"rawliteral(
             padding: 0;
             background-color: #f3f3f3;
         }
+
         .container {
             max-width: 600px;
             margin: 20px auto;
@@ -53,10 +54,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         h1 {
             text-align: center;
             color: #333;
         }
+
         .sensor-reading {
             margin-bottom: 20px;
             padding: 10px;
@@ -64,17 +67,21 @@ const char index_html[] PROGMEM = R"rawliteral(
             border-radius: 4px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
+
         p {
             margin: 5px 0;
             color: #666;
         }
+
         .status {
             display: block;
             margin-top: 5px;
         }
+
         .good {
             color: green;
         }
+
         .bad {
             color: red;
         }
@@ -106,9 +113,7 @@ void setup()
 {
     Serial.begin(9600);
 
-    // initialize LCD
-    lcd.init();
-    // turn on LCD backlight                      
+    lcd.init();                    
     lcd.backlight();
 
     pinMode(gas_sensor, INPUT);
@@ -128,22 +133,21 @@ void setup()
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
 
-    // Route for root / web page
+    // route for web page
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request){
         request->send_P(200, "text/html", index_html);
     });
 
-    // WebSocket event handling
+    // websocket event handling
     ws.onEvent(onWsEvent);
     server.addHandler(&ws);
 
-    // Start server
     server.begin();
 }
 
 void loop()
 {
-    // WiFiClient client = server.available(); // Listen for incoming clients
+    // WiFiClient client = server.available(); // listen for incoming clients
 
     float ppm_gas = calculatePPM(analogRead(gas_sensor), R0, m, c);
     float ppm_co = calculatePPM(analogRead(co_sensor), R01, m1, c1);
@@ -153,13 +157,12 @@ void loop()
     {
         if (last_state == HIGH)
             lcd.clear();
-        // set cursor to first column, first row
+
         lcd.setCursor(0, 0);
-        // print message
+
         lcd.print("Gas: ");
         lcd.print(ppm_gas);
 
-        // set cursor to first column, second row
         lcd.setCursor(0,1);
         lcd.print("CO: ");
         lcd.print(ppm_co);
@@ -181,7 +184,7 @@ void loop()
             lcd.print("CO level: Good");
     }
 
-    // Send sensor data over WebSocket
+    // send sensor data over socket
     ws.textAll(String(ppm_gas) + "," + String(ppm_co));
 
     last_state = button_state;
