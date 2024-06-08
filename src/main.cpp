@@ -5,9 +5,13 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include <AsyncWebSocket.h>
+#include <HTTPClient.h>
 
 const char* ssid = "ssid";
 const char* password = "password";
+
+const char* thingspeak_server = "http://api.thingspeak.com/update";
+String apiKey = "THINGSPEAK_API_TOKEN";
 
 AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
@@ -184,12 +188,35 @@ void loop()
             lcd.print("CO level: Good");
     }
 
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        HTTPClient http;
+        String url = thingspeak_server;
+        url += "?api_key=" + apiKey;
+        url += "&field1=" + String(ppm_gas);
+        url += "&field2=" + String(ppm_co);
+
+        http.begin(url);
+        int httpCode = http.GET();
+
+        if (httpCode > 0) {
+            Serial.printf("ThingSpeak responded with code: %d\n", httpCode);
+            String payload = http.getString();
+            Serial.println(payload);
+        } else {
+            Serial.printf("Error on HTTP request: %s\n", http.errorToString(httpCode).c_str());
+        }
+        http.end();
+    } else {
+        Serial.println("WiFi not connected");
+    }
+
     // send sensor data over socket
     ws.textAll(String(ppm_gas) + "," + String(ppm_co));
 
     last_state = button_state;
 
-    delay(350);
+    delay(30000);
 }
 
 // calculate concentration of gas in parts per million
