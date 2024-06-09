@@ -7,34 +7,48 @@
 #include <AsyncWebSocket.h>
 #include <HTTPClient.h>
 
+// network configs
 const char* ssid = "ssid";
 const char* password = "password";
 
+// thingspeak configs
 const char* thingspeak_server = "http://api.thingspeak.com/update";
 String apiKey = "THINGSPEAK_API_TOKEN";
 
-AsyncWebServer server(80);
-AsyncWebSocket ws("/ws");
+// web server configs
+AsyncWebServer server(80); // port 80
+AsyncWebSocket ws("/ws"); // web socket enpoint
 
+// lcd configs
 int lcdColumns = 16;
 int lcdRows = 2;
-int buttonPin = 19;
+
+// pins
+int button_pin = 19;
 int gas_sensor = 34;
 int co_sensor = 35;
+
+// calibration constraints for the sensors
 float m = -0.353;
 float c = 0.711;
 float R0 = 23.30;
 float m1 = -0.67;
 float c1 = 1.34;
 float R01 = 5.80;
+
+// button last state
 int last_state = HIGH;
 
+// lcd object
 LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);  
 
+// function to calculate gas concentration (Parts Per Million)
 float calculatePPM(int sensorValue, float R0, float m, float c);
 
+// web socket event handler
 void onWsEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {}
 
+// HTML content (stored in flash memory)
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE html>
 <html lang="en">
@@ -122,12 +136,13 @@ void setup()
 
     pinMode(gas_sensor, INPUT);
     pinMode(co_sensor, INPUT);
-    pinMode(buttonPin, INPUT_PULLUP);
+    pinMode(button_pin, INPUT_PULLUP);
 
+    // connect to wifi network
     Serial.print("Connecting to ");
     Serial.println(ssid);
     WiFi.begin(ssid, password);
-    while (WiFi.status() != WL_CONNECTED)
+    while (WiFi.status() != WL_CONNECTED) // wait till wifi connect
     {
         Serial.print(".");
     }
@@ -135,28 +150,28 @@ void setup()
     Serial.println("");
     Serial.println("WiFi connected");
     Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    Serial.println(WiFi.localIP()); // get local ip of web server
 
-    // route for web page
+    // route for web page (for GET requests)
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request){
         request->send_P(200, "text/html", index_html);
     });
 
-    // websocket event handling
-    ws.onEvent(onWsEvent);
-    server.addHandler(&ws);
+    // web socket event handling
+    ws.onEvent(onWsEvent); // set web socket event handler function
+    server.addHandler(&ws); // add web socket handler to server
 
     server.begin();
 }
 
 void loop()
 {
-    // WiFiClient client = server.available(); // listen for incoming clients
-
+    // read analog data
     float ppm_gas = calculatePPM(analogRead(gas_sensor), R0, m, c);
     float ppm_co = calculatePPM(analogRead(co_sensor), R01, m1, c1);
-    int button_state = digitalRead(buttonPin);
+    int button_state = digitalRead(button_pin);
 
+    // button to change to the gas data screen on lcd
     if (button_state == LOW)
     {
         if (last_state == HIGH)
@@ -171,7 +186,7 @@ void loop()
         lcd.print("CO: ");
         lcd.print(ppm_co);
     }
-    else
+    else // display bad or good result instead
     {
         if (last_state == LOW)
             lcd.clear();
@@ -188,26 +203,38 @@ void loop()
             lcd.print("CO level: Good");
     }
 
-    if (WiFi.status() == WL_CONNECTED)
+    // sending data to thingspeak server
+    if (WiFi.status() == WL_CONNECTED) // check if is connected to wifi network
     {
+        // http client object and url of thingspeak server
         HTTPClient http;
         String url = thingspeak_server;
+
+        // concatenate url with appropriate url variables
         url += "?api_key=" + apiKey;
         url += "&field1=" + String(ppm_gas);
         url += "&field2=" + String(ppm_co);
 
+        // begin sending http GET request to thingspeak
         http.begin(url);
         int httpCode = http.GET();
 
-        if (httpCode > 0) {
+        // check http status code
+        if (httpCode > 0)
+        {
             Serial.printf("ThingSpeak responded with code: %d\n", httpCode);
-            String payload = http.getString();
+            String payload = http.getString(); // response data from thingspeak
             Serial.println(payload);
-        } else {
+        }
+        else // http request error
+        {
             Serial.printf("Error on HTTP request: %s\n", http.errorToString(httpCode).c_str());
         }
-        http.end();
-    } else {
+
+        http.end(); // end http request
+    }
+    else
+    {
         Serial.println("WiFi not connected");
     }
 
@@ -216,17 +243,17 @@ void loop()
 
     last_state = button_state;
 
-    delay(30000);
+    delay(30000); // every 30 seconds
 }
 
 // calculate concentration of gas in parts per million
 // params: raw sensor reading, resistance of the sensor in clean air, slope of the calibration curve, intercept of the calibration curve
 float calculatePPM(int sensorValue, float R0, float m, float c)
 {
-    float sensor_volt = sensorValue * (3.3 / 4096.0);
-    float RS_gas = ((3.3 * 10.0) / sensor_volt) - 10.0;
-    float ratio = RS_gas / R0;
-    double ppm_log = (log10(ratio) - c) / m;
-    double ppm = pow(10, ppm_log);
+    float sensor_volt = sensorValue * (3.3 / 4096.0); // convert to voltage value
+    float RS_gas = ((3.3 * 10.0) / sensor_volt) - 10.0; // sensor resistance
+    float ratio = RS_gas / R0; // ratio of sensor resistance to baseline resistance
+    double ppm_log = (log10(ratio) - c) / m; // logarithm of PPM value using calibration curve
+    double ppm = pow(10, ppm_log); // convert logarithm back to PPm value
     return ppm;
 }
