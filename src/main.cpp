@@ -122,7 +122,7 @@ const char index_html[] PROGMEM = R"rawliteral(
         };
 
         async function fetchData(field) {
-            const response = await fetch(`https://api.thingspeak.com/channels/2572875/fields/${field}.json?api_key=52T8SJUV0H3WN0NK&results=10`);
+            const response = await fetch(`https://api.thingspeak.com/channels/CHANNEL_ID/fields/${field}.json?api_key=READ_API_KEY&results=10`);
             const data = await response.json();
             return data.feeds.map(feed => ({
                 value: feed[`field${field}`],
