@@ -100,12 +100,15 @@ const char index_html[] PROGMEM = R"rawliteral(
             color: red;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Real-time Sensor Readings</h1>
         <div class="sensor-reading" id="gas">Gas: </div>
         <div class="sensor-reading" id="co">CO: </div>
+        <canvas id="gasChart" width="400" height="200"></canvas>
+        <canvas id="coChart" width="400" height="200"></canvas>
     </div>
     <script>
         var socket = new WebSocket("ws://" + window.location.host + "/ws");
@@ -117,6 +120,85 @@ const char index_html[] PROGMEM = R"rawliteral(
             document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 30 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 30 ? 'Bad' : 'Good') + "</span>";
             document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 3 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 3 ? 'Bad' : 'Good') + "</span>";
         };
+
+        async function fetchData(field) {
+            const response = await fetch(`https://api.thingspeak.com/channels/2572875/fields/${field}.json?api_key=52T8SJUV0H3WN0NK&results=10`);
+            const data = await response.json();
+            return data.feeds.map(feed => ({
+                value: feed[`field${field}`],
+                timestamp: new Date(feed.created_at)
+            }));
+        }
+
+        async function renderCharts() {
+            const gasData = await fetchData(1);
+            const coData = await fetchData(2);
+
+            const gasLabels = gasData.map(entry => entry.timestamp.toLocaleDateString());
+            const coLabels = coData.map(entry => entry.timestamp.toLocaleDateString());
+
+            new Chart(document.getElementById('gasChart'), {
+                type: 'line',
+                data: {
+                    labels: gasLabels,
+                    datasets: [{
+                        label: 'Gas Sensor Data',
+                        data: gasData.map(entry => entry.value),
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Gas (ppm)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            new Chart(document.getElementById('coChart'), {
+                type: 'line',
+                data: {
+                    labels: coLabels,
+                    datasets: [{
+                        label: 'CO Sensor Data',
+                        data: coData.map(entry => entry.value),
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 2,
+                        fill: false
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'CO (ppm)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        renderCharts();
     </script>
 </body>
 </html>
