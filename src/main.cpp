@@ -36,6 +36,9 @@ float m1 = -0.67;
 float c1 = 1.34;
 float R01 = 5.80;
 
+unsigned long lastThingSpeakTime = 0; // to store the last time data was sent to ThingSpeak
+const unsigned long thingspeakInterval = 3600000; // every hour
+
 // button last state
 int last_state = HIGH;
 
@@ -63,7 +66,6 @@ const char index_html[] PROGMEM = R"rawliteral(
             padding: 0;
             background-color: #f3f3f3;
         }
-
         .container {
             max-width: 600px;
             margin: 20px auto;
@@ -72,12 +74,10 @@ const char index_html[] PROGMEM = R"rawliteral(
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
         h1 {
             text-align: center;
             color: #333;
         }
-
         .sensor-reading {
             margin-bottom: 20px;
             padding: 10px;
@@ -85,21 +85,17 @@ const char index_html[] PROGMEM = R"rawliteral(
             border-radius: 4px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
         }
-
         p {
             margin: 5px 0;
             color: #666;
         }
-
         .status {
             display: block;
             margin-top: 5px;
         }
-
         .good {
             color: green;
         }
-
         .bad {
             color: red;
         }
@@ -111,7 +107,6 @@ const char index_html[] PROGMEM = R"rawliteral(
         <div class="sensor-reading" id="gas">Gas: </div>
         <div class="sensor-reading" id="co">CO: </div>
     </div>
-
     <script>
         var socket = new WebSocket("ws://" + window.location.host + "/ws");
         socket.onmessage = function(event) {
@@ -203,39 +198,44 @@ void loop()
             lcd.print("CO level: Good");
     }
 
-    // sending data to thingspeak server
-    if (WiFi.status() == WL_CONNECTED) // check if is connected to wifi network
+    // Check if it's time to send data to ThingSpeak
+    if (millis() - lastThingSpeakTime >= thingspeakInterval) 
     {
-        // http client object and url of thingspeak server
-        HTTPClient http;
-        String url = thingspeak_server;
-
-        // concatenate url with appropriate url variables
-        url += "?api_key=" + apiKey;
-        url += "&field1=" + String(ppm_gas);
-        url += "&field2=" + String(ppm_co);
-
-        // begin sending http GET request to thingspeak
-        http.begin(url);
-        int httpCode = http.GET();
-
-        // check http status code
-        if (httpCode > 0)
+        lastThingSpeakTime = millis();
+        // sending data to thingspeak server
+        if (WiFi.status() == WL_CONNECTED) // check if is connected to wifi network
         {
-            Serial.printf("ThingSpeak responded with code: %d\n", httpCode);
-            String payload = http.getString(); // response data from thingspeak
-            Serial.println(payload);
-        }
-        else // http request error
-        {
-            Serial.printf("Error on HTTP request: %s\n", http.errorToString(httpCode).c_str());
-        }
+            // http client object and url of thingspeak server
+            HTTPClient http;
+            String url = thingspeak_server;
 
-        http.end(); // end http request
-    }
-    else
-    {
-        Serial.println("WiFi not connected");
+            // concatenate url with appropriate url variables
+            url += "?api_key=" + apiKey;
+            url += "&field1=" + String(ppm_gas);
+            url += "&field2=" + String(ppm_co);
+
+            // begin sending http GET request to thingspeak
+            http.begin(url);
+            int httpCode = http.GET();
+
+            // check http status code
+            if (httpCode > 0)
+            {
+                Serial.printf("ThingSpeak responded with code: %d\n", httpCode);
+                String payload = http.getString(); // response data from thingspeak
+                Serial.println(payload);
+            }
+            else // http request error
+            {
+                Serial.printf("Error on HTTP request: %s\n", http.errorToString(httpCode).c_str());
+            }
+
+            http.end(); // end http request
+        }
+        else
+        {
+            Serial.println("WiFi not connected");
+        }
     }
 
     // send sensor data over socket
@@ -243,7 +243,7 @@ void loop()
 
     last_state = button_state;
 
-    delay(30000); // every 30 seconds
+    delay(1500); // every 1.5 seconds
 }
 
 // calculate concentration of gas in parts per million
