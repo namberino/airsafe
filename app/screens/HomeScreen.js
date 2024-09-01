@@ -13,14 +13,14 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Monitor and analyze air quality data in real-time.</Text>
       
       {/* Buttons with Icons */}
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Tables')}>
-        <Ionicons name="grid-outline" size={24} color="white" />
-        <Text style={styles.buttonText}>View Tables</Text>
-      </TouchableOpacity>
-      
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('LiveData')}>
         <Ionicons name="pulse-outline" size={24} color="white" />
         <Text style={styles.buttonText}>Live Data</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Tables')}>
+        <Ionicons name="grid-outline" size={24} color="white" />
+        <Text style={styles.buttonText}>Past Data</Text>
       </TouchableOpacity>
       
       {/* Additional Description */}
@@ -33,6 +33,7 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 50,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

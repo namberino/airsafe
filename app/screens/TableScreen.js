@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Button, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,7 +17,7 @@ const TableScreen = () => {
   const fetchData = async (field, setData) => {
     try {
       const response = await axios.get(
-        `https://api.thingspeak.com/channels/2572875/fields/${field}.json?api_key=EVUOCDYFKA4Q19RU&results=100`
+        `https://api.thingspeak.com/channels/CHANNEL_ID/fields/${field}.json?api_key=API_READ_KEY&results=100`
       );
       const data = response.data.feeds.map(feed => ({
         value: feed[`field${field}`],
@@ -30,7 +30,7 @@ const TableScreen = () => {
   };
 
   const renderTable = (data, title) => {
-    const itemsPerPage = 6;
+    const itemsPerPage = 5;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedData = data.slice(startIndex, endIndex);
@@ -38,6 +38,10 @@ const TableScreen = () => {
     return (
       <View style={styles.table}>
         <Text style={styles.tableTitle}>{title}</Text>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.tableCell, styles.headerCell]}>Timestamp</Text>
+          <Text style={[styles.tableCell, styles.headerCell]}>Value (PPM)</Text>
+        </View>
         <FlatList
           data={paginatedData}
           keyExtractor={(item, index) => index.toString()}
@@ -48,27 +52,6 @@ const TableScreen = () => {
             </View>
           )}
         />
-        <View style={styles.pagination}>
-          <TouchableOpacity
-            style={[styles.paginationButton, currentPage === 1 && styles.disabledButton]}
-            onPress={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            <Ionicons name="chevron-back" size={24} color={currentPage === 1 ? '#ccc' : '#fff'} />
-          </TouchableOpacity>
-          <Text style={styles.pageNumber}>Page {currentPage}</Text>
-          <TouchableOpacity
-            style={[styles.paginationButton, endIndex >= data.length && styles.disabledButton]}
-            onPress={() =>
-              setCurrentPage(prevPage =>
-                prevPage * itemsPerPage < data.length ? prevPage + 1 : prevPage
-              )
-            }
-            disabled={endIndex >= data.length}
-          >
-            <Ionicons name="chevron-forward" size={24} color={endIndex >= data.length ? '#ccc' : '#fff'} />
-          </TouchableOpacity>
-        </View>
       </View>
     );
   };
@@ -89,15 +72,39 @@ const TableScreen = () => {
           <Text style={[styles.switchButtonText, currentTable === 'CO' && styles.activeButtonText]}>CO Data</Text>
         </TouchableOpacity>
       </View>
+
       {currentTable === 'Gas'
         ? renderTable(gasData, 'Gas Sensor Data')
         : renderTable(coData, 'CO Sensor Data')}
+
+      <View style={styles.paginationContainer}>
+        <TouchableOpacity
+          style={[styles.paginationButton, currentPage === 1 && styles.disabledButton]}
+          onPress={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
+          disabled={currentPage === 1}
+        >
+          <Ionicons name="chevron-back" size={24} color={currentPage === 1 ? '#ccc' : '#fff'} />
+        </TouchableOpacity>
+        <Text style={styles.pageNumber}>Page {currentPage}</Text>
+        <TouchableOpacity
+          style={[styles.paginationButton, currentPage * 8 >= gasData.length && styles.disabledButton]}
+          onPress={() =>
+            setCurrentPage(prevPage =>
+              prevPage * 8 < gasData.length ? prevPage + 1 : prevPage
+            )
+          }
+          disabled={currentPage * 8 >= gasData.length}
+        >
+          <Ionicons name="chevron-forward" size={24} color={currentPage * 8 >= gasData.length ? '#ccc' : '#fff'} />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 50,
     flex: 1,
     padding: 16,
     backgroundColor: '#f5f5f5',
@@ -132,6 +139,7 @@ const styles = StyleSheet.create({
     color: '#ffeb3b',
   },
   table: {
+    flex: 1,
     marginBottom: 20,
   },
   tableTitle: {
@@ -140,6 +148,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: '#333',
     textAlign: 'center',
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 10,
+    marginBottom: 10,
   },
   tableRow: {
     flexDirection: 'row',
@@ -162,11 +179,28 @@ const styles = StyleSheet.create({
     width: '50%',
     textAlign: 'center',
   },
-  pagination: {
+  headerCell: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#333',
+  },
+  paginationContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 10,
+    position: 'absolute',
+    bottom: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
   },
   paginationButton: {
     padding: 10,
