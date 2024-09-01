@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Button } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Button, TouchableOpacity } from 'react-native';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 
 const TableScreen = () => {
   const [gasData, setGasData] = useState([]);
@@ -29,7 +30,7 @@ const TableScreen = () => {
   };
 
   const renderTable = (data, title) => {
-    const itemsPerPage = 8;
+    const itemsPerPage = 6;
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedData = data.slice(startIndex, endIndex);
@@ -48,21 +49,25 @@ const TableScreen = () => {
           )}
         />
         <View style={styles.pagination}>
-          <Button
-            title="Previous"
+          <TouchableOpacity
+            style={[styles.paginationButton, currentPage === 1 && styles.disabledButton]}
             onPress={() => setCurrentPage(prevPage => Math.max(prevPage - 1, 1))}
             disabled={currentPage === 1}
-          />
+          >
+            <Ionicons name="chevron-back" size={24} color={currentPage === 1 ? '#ccc' : '#fff'} />
+          </TouchableOpacity>
           <Text style={styles.pageNumber}>Page {currentPage}</Text>
-          <Button
-            title="Next"
+          <TouchableOpacity
+            style={[styles.paginationButton, endIndex >= data.length && styles.disabledButton]}
             onPress={() =>
               setCurrentPage(prevPage =>
                 prevPage * itemsPerPage < data.length ? prevPage + 1 : prevPage
               )
             }
             disabled={endIndex >= data.length}
-          />
+          >
+            <Ionicons name="chevron-forward" size={24} color={endIndex >= data.length ? '#ccc' : '#fff'} />
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -71,16 +76,18 @@ const TableScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.switchContainer}>
-        <Button
-          title="Gas Data"
+        <TouchableOpacity
+          style={[styles.switchButton, currentTable === 'Gas' && styles.activeButton]}
           onPress={() => setCurrentTable('Gas')}
-          disabled={currentTable === 'Gas'}
-        />
-        <Button
-          title="CO Data"
+        >
+          <Text style={[styles.switchButtonText, currentTable === 'Gas' && styles.activeButtonText]}>Gas Data</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.switchButton, currentTable === 'CO' && styles.activeButton]}
           onPress={() => setCurrentTable('CO')}
-          disabled={currentTable === 'CO'}
-        />
+        >
+          <Text style={[styles.switchButtonText, currentTable === 'CO' && styles.activeButtonText]}>CO Data</Text>
+        </TouchableOpacity>
       </View>
       {currentTable === 'Gas'
         ? renderTable(gasData, 'Gas Sensor Data')
@@ -93,28 +100,62 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: '#f5f5f5',
   },
   switchContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 20,
   },
+  switchButton: {
+    flex: 1,
+    paddingVertical: 12,
+    marginHorizontal: 5,
+    backgroundColor: '#6200ee',
+    borderRadius: 25,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  activeButton: {
+    backgroundColor: '#3700b3',
+  },
+  switchButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  activeButtonText: {
+    color: '#ffeb3b',
+  },
   table: {
     marginBottom: 20,
   },
   tableTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: 'bold',
     marginBottom: 10,
+    color: '#333',
     textAlign: 'center',
   },
   tableRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
   tableCell: {
     fontSize: 16,
@@ -127,8 +168,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 10,
   },
+  paginationButton: {
+    padding: 10,
+    backgroundColor: '#6200ee',
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  disabledButton: {
+    backgroundColor: '#ccc',
+  },
   pageNumber: {
     fontSize: 16,
+    color: '#333',
   },
 });
 
