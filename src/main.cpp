@@ -19,9 +19,7 @@ String apiKey = "THINGSPEAK_API_TOKEN";
 AsyncWebServer server(80); // port 80
 AsyncWebSocket ws("/ws"); // web socket enpoint
 
-// lcd configs
-int lcdColumns = 16;
-int lcdRows = 2;
+bool is_first_run = true;
 
 // pins
 int button_pin = 19;
@@ -37,13 +35,13 @@ float c1 = 1.34;
 float R01 = 5.80;
 
 unsigned long lastThingSpeakTime = 0; // to store the last time data was sent to ThingSpeak
-const unsigned long thingspeakInterval = 3600000; // every hour
+const unsigned long thingspeakInterval = 900000; // every 30 minutes
 
 // button last state
 int last_state = HIGH;
 
 // lcd object
-LiquidCrystal_I2C lcd(0x27, lcdColumns, lcdRows);  
+LiquidCrystal_I2C lcd(0x27, 16, 2);  
 
 // function to calculate gas concentration (Parts Per Million)
 float calculatePPM(int sensorValue, float R0, float m, float c);
@@ -268,22 +266,24 @@ void loop()
         if (last_state == LOW)
             lcd.clear();
         lcd.setCursor(0, 0);
-        if (ppm_gas > 30) 
-            lcd.print("Gas level: Bad");
+        if (ppm_gas > 80) 
+            lcd.print("Gas: Bad");
         else
-            lcd.print("Gas level: Good");
+            lcd.print("Gas: Good");
 
-        lcd.setCursor(0,1);
-        if (ppm_co > 3.2) 
-            lcd.print("CO level: Bad");
+        lcd.setCursor(0, 1);
+        if (ppm_co > 6) 
+            lcd.print("CO: Bad");
         else
-            lcd.print("CO level: Good");
+            lcd.print("CO: Good");
     }
 
     // Check if it's time to send data to ThingSpeak
-    if (millis() - lastThingSpeakTime >= thingspeakInterval) 
+    if (millis() - lastThingSpeakTime >= thingspeakInterval || is_first_run) 
     {
         lastThingSpeakTime = millis();
+        is_first_run = false;
+
         // sending data to thingspeak server
         if (WiFi.status() == WL_CONNECTED) // check if is connected to wifi network
         {
