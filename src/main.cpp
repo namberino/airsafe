@@ -8,12 +8,12 @@
 #include <HTTPClient.h>
 
 // network configs
-const char* ssid = "ssid";
-const char* password = "password";
+const char* ssid = "qwerty";
+const char* password = "22222222";
 
 // thingspeak configs
 const char* thingspeak_server = "http://api.thingspeak.com/update";
-String apiKey = "THINGSPEAK_API_TOKEN";
+String apiKey = "G06HMFEEHU6NTOHJ";
 
 // web server configs
 AsyncWebServer server(80); // port 80
@@ -115,12 +115,12 @@ const char index_html[] PROGMEM = R"rawliteral(
             var gasValue = parseFloat(data[0]);
             var coValue = parseFloat(data[1]);
 
-            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 30 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 30 ? 'Bad' : 'Good') + "</span>";
-            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 3 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 3 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("gas").innerHTML = "Gas: " + gasValue + " ppm" + "<span class='" + (gasValue > 1200 ? 'bad' : 'good') + " status'>" + "Air quality: " + (gasValue > 30 ? 'Bad' : 'Good') + "</span>";
+            document.getElementById("co").innerHTML = "CO: " + coValue + " ppm" + "<span class='" + (coValue > 50 ? 'bad' : 'good') + " status'>" + "Air quality: " + (coValue > 3 ? 'Bad' : 'Good') + "</span>";
         };
 
         async function fetchData(field) {
-            const response = await fetch(`https://api.thingspeak.com/channels/CHANNEL_ID/fields/${field}.json?api_key=READ_API_KEY&results=10`);
+            const response = await fetch(`https://api.thingspeak.com/channels/2572875/fields/${field}.json?api_key=EVUOCDYFKA4Q19RU&results=10`);
             const data = await response.json();
             return data.feeds.map(feed => ({
                 value: feed[`field${field}`],
@@ -266,13 +266,13 @@ void loop()
         if (last_state == LOW)
             lcd.clear();
         lcd.setCursor(0, 0);
-        if (ppm_gas > 80) 
+        if (ppm_gas > 1200) 
             lcd.print("Gas: Bad");
         else
             lcd.print("Gas: Good");
 
         lcd.setCursor(0, 1);
-        if (ppm_co > 6) 
+        if (ppm_co > 50) 
             lcd.print("CO: Bad");
         else
             lcd.print("CO: Good");

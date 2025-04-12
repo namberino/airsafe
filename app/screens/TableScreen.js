@@ -17,7 +17,7 @@ const TableScreen = () => {
   const fetchData = async (field, setData) => {
     try {
       const response = await axios.get(
-        `https://api.thingspeak.com/channels/CHANNEL_ID/fields/${field}.json?api_key=API_READ_KEY&results=100`
+        `https://api.thingspeak.com/channels/2572875/fields/${field}.json?api_key=EVUOCDYFKA4Q19RU&results=100`
       );
       const data = response.data.feeds.map(feed => ({
         value: feed[`field${field}`],

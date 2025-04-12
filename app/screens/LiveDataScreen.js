@@ -7,7 +7,7 @@ const LiveDataScreen = () => {
   const [co, setCo] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://192.168.1.155/ws');
+    const ws = new WebSocket('ws://192.168.76.212/ws');
 
     ws.onmessage = (event) => {
       const [gasValue, coValue] = event.data.split(',');
